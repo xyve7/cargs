@@ -1,0 +1,101 @@
+#include <cargs.h>
+#include <stdlib.h>
+
+int eprintf(const char* restrict format, ...) {
+    va_list ap;
+    va_start(ap, format);
+
+    int ret = vfprintf(stderr, format, ap);
+
+    va_end(ap);
+    return ret;
+}
+void cargs_init(cargs_parser* parser, cargs_option* options, size_t len, int argc, const char** argv) {
+    parser->argc = argc;
+    parser->argv = argv;
+    parser->options = options;
+    parser->len = len;
+}
+void cargs_parse(cargs_parser* parser) {
+    /**
+     * Flag which will be set if the following conditions are met:
+     *   1. a REQUIRED argument passed is not provided.
+     *   2. a VALUE for ANY argument which requires a value is not provided.
+     */
+    bool abort = false;
+    for (int i = 1; i < parser->argc; i++) {
+        for (size_t j = 0; j < parser->len; j++) {
+            if (parser->options[j].long_opt != NULL) {
+                size_t long_opt_len = strlen(parser->options[j].long_opt);
+                if (strncmp(parser->argv[i], "--", 2) == 0 && strncmp(parser->argv[i] + 2, parser->options[j].long_opt, long_opt_len) == 0) {
+                    const char* equal = parser->argv[i] + long_opt_len + 2;
+                    if (*equal == '=') {
+                        // FIXME: fail if there is no argument after the equal sign
+                        switch (parser->options[j].type) {
+                        case STRING:
+                            *(const char**)parser->options[j].out = (equal + 1);
+                            break;
+                        default:
+                            eprintf("unhandled type\n");
+                            exit(1);
+                            break;
+                        }
+                    } else if (*equal == '\0') {
+                        int next = i + 1;
+                        // FIXME: check if the next argument is a option, if so, fail
+                        if (next < parser->argc) {
+                            switch (parser->options[j].type) {
+                            case STRING:
+                                *(const char**)parser->options[j].out = parser->argv[next];
+                                break;
+                            default:
+                                eprintf("unhandled type\n");
+                                abort = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        eprintf("unknown argument '%s', did you mean '--%s'?\n", parser->argv[i], parser->options[j].long_opt);
+                        abort = true;
+                    }
+                }
+            }
+            if (parser->options[j].short_opt != '\0') {
+                if (parser->argv[i][0] == '-' && parser->argv[i][1] == parser->options[j].short_opt) {
+                    if (parser->argv[i][2] == '=') {
+                        // FIXME: fail if there is no argument after the equal sign
+                        switch (parser->options[j].type) {
+                        case STRING:
+                            *(const char**)parser->options[j].out = (parser->argv[i] + 3);
+                            break;
+                        default:
+                            eprintf("unhandled type\n");
+                            exit(1);
+                            break;
+                        }
+                    } else if (parser->argv[i][2] == '\0') {
+                        int next = i + 1;
+                        // FIXME: check if the next argument is a option, if so, fail
+                        if (next < parser->argc) {
+                            switch (parser->options[j].type) {
+                            case STRING:
+                                *(const char**)parser->options[j].out = parser->argv[next];
+                                break;
+                            default:
+                                eprintf("unhandled type\n");
+                                abort = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        eprintf("unknown argument '%s', did you mean '-%c'?\n", parser->argv[i], parser->options[j].short_opt);
+                        abort = true;
+                    }
+                }
+            }
+        }
+    }
+    if (abort) {
+        exit(1);
+    }
+}

@@ -1,0 +1,8 @@
+Option:
+  -f --file
+
+-f=file.txt (valid)
+-f file.txt (valid)
+
+--file file.txt (valid)
+--file=file.txt (valid)
