@@ -26,7 +26,7 @@ typedef enum {
 } cargs_specifier;
 
 typedef struct {
-    const char short_opt;
+    const char* short_opt;
     const char* long_opt;
     bool required;
     cargs_type type;

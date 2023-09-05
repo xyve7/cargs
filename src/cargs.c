@@ -22,6 +22,7 @@ void cargs_parse(cargs_parser* parser) {
      *   1. a REQUIRED argument passed is not provided.
      *   2. a VALUE for ANY argument which requires a value is not provided.
      */
+    // FIXME: Reduce the overall footprint of this code
     bool abort = false;
     for (int i = 1; i < parser->argc; i++) {
         for (size_t j = 0; j < parser->len; j++) {
@@ -102,6 +103,30 @@ void cargs_parse(cargs_parser* parser) {
             }
         }
     }
+    if (abort) {
+        exit(1);
+    }
+}
+
+void cargs_parse_2(cargs_parser* parser) {
+    bool abort = false;
+    const char* equal = NULL;
+    for (int i = 1; i < parser->argc; i++) {
+        for (size_t j = 0; j < parser->len; j++) {
+            if(parser->options[i].long_opt != NULL) {
+                size_t long_opt_len = strlen(parser->options[j].long_opt);
+                if (strncmp(parser->argv[i], "--", 2) == 0 && strncmp(parser->argv[i] + 2, parser->options[j].long_opt, long_opt_len) == 0) {
+                    equal = parser->argv[i] + long_opt_len + 2;
+                }
+            }
+            if(parser->options[i].short_opt != NULL) {
+                // TODO: if the argument's length which was passed is greater than 1 (including the -), then assume all flags are boolean
+                // if the flag isn't a boolean, throw an error
+                // ex: -abc
+            }   
+        }
+    }
+
     if (abort) {
         exit(1);
     }

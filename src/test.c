@@ -4,8 +4,8 @@ int main(int argc, const char** argv) {
     const char* val = NULL;
     const char* output = NULL;
     cargs_option opts[] = {
-        cargs_def_field('f', "file", true, STRING, REGULAR, &val),
-        cargs_def_field('o', "output", true, STRING, REGULAR, &output)
+        cargs_def_field("f", "file", true, STRING, REGULAR, &val),
+        cargs_def_field("o", "output", true, STRING, REGULAR, &output)
     };
 
     cargs_parser parser;
