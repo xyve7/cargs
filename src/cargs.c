@@ -64,10 +64,11 @@ void cargs_parse(cargs_parser* parser) {
                     }
                 }
             }
-            if (parser->options[j].short_opt != '\0') {
+            if (parser->options[j].short_opt != NULL) {
                 if (parser->argv[i][0] == '-' && parser->argv[i][1] == parser->options[j].short_opt) {
-                    if (parser->argv[i][2] == '=') {
-                        if (parser->argv[i][3] == '\0') {
+                    const char* equal = parser->argv[i] + 2;
+                    if (equal == '=') {
+                        if (*(equal + 1) == '\0') {
                             eprintf("no argument supplied after '='\n");
                             abort = true;
                             break;
@@ -81,7 +82,7 @@ void cargs_parse(cargs_parser* parser) {
                             exit(1);
                             break;
                         }
-                    } else if (parser->argv[i][2] == '\0') {
+                    } else if (equal == '\0') {
                         int next = i + 1;
                         // FIXME: check if the next argument is a option, if so, fail
                         if (next < parser->argc) {
@@ -103,30 +104,6 @@ void cargs_parse(cargs_parser* parser) {
             }
         }
     }
-    if (abort) {
-        exit(1);
-    }
-}
-
-void cargs_parse_2(cargs_parser* parser) {
-    bool abort = false;
-    const char* equal = NULL;
-    for (int i = 1; i < parser->argc; i++) {
-        for (size_t j = 0; j < parser->len; j++) {
-            if(parser->options[i].long_opt != NULL) {
-                size_t long_opt_len = strlen(parser->options[j].long_opt);
-                if (strncmp(parser->argv[i], "--", 2) == 0 && strncmp(parser->argv[i] + 2, parser->options[j].long_opt, long_opt_len) == 0) {
-                    equal = parser->argv[i] + long_opt_len + 2;
-                }
-            }
-            if(parser->options[i].short_opt != NULL) {
-                // TODO: if the argument's length which was passed is greater than 1 (including the -), then assume all flags are boolean
-                // if the flag isn't a boolean, throw an error
-                // ex: -abc
-            }   
-        }
-    }
-
     if (abort) {
         exit(1);
     }
